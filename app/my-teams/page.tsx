@@ -55,8 +55,7 @@ export default async function MyTeamsPage() {
   const scheduledGames = (games || []).filter(
     (g) => !g.is_playoff && g.season === currentSeason && g.status !== 'final'
   )
-  const upcomingWeeks = [...new Set(scheduledGames.map((g) => g.week))].sort((a, b) => a - b)
-
+const upcomingWeeks = Array.from(new Set(scheduledGames.map((g) => g.week))).sort((a, b) => a - b)
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar displayName={leagueUser?.display_name || user.email || 'Player'} />
