@@ -115,15 +115,18 @@ export function calculateStandings({
       })
 
       const teamPoints = gameResults.reduce((sum, r) => sum + r.points, 0)
-      const wins = gameResults.filter(
-        (r) => r.team_score !== null && r.opponent_score !== null && r.team_score > r.opponent_score
-      ).length
-      const losses = gameResults.filter(
-        (r) => r.team_score !== null && r.opponent_score !== null && r.team_score < r.opponent_score
-      ).length
-      const ties = gameResults.filter(
-        (r) => r.team_score !== null && r.opponent_score !== null && r.team_score === r.opponent_score
-      ).length
+const wins = gameResults.filter(
+  (r) => r.game.status === 'final' && r.result.team_score !== null && r.result.opponent_score !== null &&
+    r.result.team_score > r.result.opponent_score
+).length
+const losses = gameResults.filter(
+  (r) => r.game.status === 'final' && r.result.team_score !== null && r.result.opponent_score !== null &&
+    r.result.team_score < r.result.opponent_score
+).length
+const ties = gameResults.filter(
+  (r) => r.game.status === 'final' && r.result.team_score !== null && r.result.opponent_score !== null &&
+    r.result.team_score === r.result.opponent_score
+).length
 
       return {
         team,

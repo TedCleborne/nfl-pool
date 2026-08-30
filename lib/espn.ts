@@ -90,8 +90,8 @@ export async function fetchWeekScoreboard(
       playoffRound,
       homeTeamEspnId: homeTeam?.team?.id,
       awayTeamEspnId: awayTeam?.team?.id,
-      homeScore: homeTeam?.score ? parseInt(homeTeam.score) : null,
-      awayScore: awayTeam?.score ? parseInt(awayTeam.score) : null,
+homeScore: homeTeam?.score != null ? parseInt(homeTeam.score) : null,
+awayScore: awayTeam?.score != null ? parseInt(awayTeam.score) : null,
       status,
       kickoffTime: event.date,
     }
