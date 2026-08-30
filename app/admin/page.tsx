@@ -40,8 +40,6 @@ export default function AdminPage() {
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
 
-  // Local state: which team is assigned to each slot
-  // draftMap[userId][pickIndex] = teamId
   const [draftMap, setDraftMap] = useState<Record<string, number[]>>({})
 
   async function fetchData(pw: string) {
@@ -58,7 +56,6 @@ export default function AdminPage() {
     setData(json)
     setAuthed(true)
 
-    // Initialize draftMap from existing assignments
     const map: Record<string, number[]> = {}
     json.users.forEach((u) => { map[u.id] = [0, 0, 0, 0] })
     json.assignments.forEach((a) => {
@@ -87,6 +84,7 @@ export default function AdminPage() {
     }
     setSyncing(false)
   }
+
   async function handleSave() {
     if (!data) return
     setSaving(true)
@@ -123,7 +121,6 @@ export default function AdminPage() {
   function assignTeam(userId: string, pickIndex: number, teamId: number) {
     setDraftMap((prev) => {
       const updated = { ...prev }
-      // Remove this team from any other slot
       Object.keys(updated).forEach((uid) => {
         updated[uid] = updated[uid].map((t, i) => {
           if (t === teamId && !(uid === userId && i === pickIndex)) return 0
@@ -137,7 +134,6 @@ export default function AdminPage() {
     })
   }
 
-  // Teams not yet assigned
   const assignedTeamIds = new Set(
     Object.values(draftMap).flat().filter(Boolean)
   )
@@ -181,21 +177,33 @@ export default function AdminPage() {
               This replaces all existing assignments.
             </p>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="bg-nfl-navy text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-900 transition disabled:opacity-50"
-          >
-            {saving ? 'Saving…' : 'Save Assignments'}
-          </button>
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50"
-          >
-            {syncing ? 'Syncing…' : '🔄 Sync Scores'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50"
+            >
+              {syncing ? 'Syncing…' : '🔄 Sync Scores'}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-nfl-navy text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-900 transition disabled:opacity-50"
+            >
+              {saving ? 'Saving…' : 'Save Assignments'}
+            </button>
+          </div>
         </div>
+
+        {syncMsg && (
+          <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${
+            syncMsg.startsWith('✓')
+              ? 'bg-green-50 text-green-700 border border-green-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}>
+            {syncMsg}
+          </div>
+        )}
 
         {saveMsg && (
           <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${
@@ -226,14 +234,13 @@ export default function AdminPage() {
                         className="flex-1 border border-gray-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-nfl-navy"
                       >
                         <option value="">— unassigned —</option>
-                        {/* Show assigned team + all unassigned teams */}
                         {team && (
                           <option value={team.id}>{team.full_name}</option>
                         )}
                         {data.teams
                           .filter((t) => !assignedTeamIds.has(t.id) || t.id === teamId)
                           .sort((a, b) => a.full_name.localeCompare(b.full_name))
-                          .filter((t) => t.id !== teamId) // avoid dupe
+                          .filter((t) => t.id !== teamId)
                           .map((t) => (
                             <option key={t.id} value={t.id}>{t.full_name}</option>
                           ))}
