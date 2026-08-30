@@ -89,18 +89,19 @@ export default function TeamCard({
     }
   })
 
-const wins = gameResults.filter(
-  (r) => r.game.status === 'final' && r.result.team_score !== null && r.result.opponent_score !== null &&
-    r.result.team_score > r.result.opponent_score
-).length
-const losses = gameResults.filter(
-  (r) => r.game.status === 'final' && r.result.team_score !== null && r.result.opponent_score !== null &&
-    r.result.team_score < r.result.opponent_score
-).length
-const ties = gameResults.filter(
-  (r) => r.game.status === 'final' && r.result.team_score !== null && r.result.opponent_score !== null &&
-    r.result.team_score === r.result.opponent_score
-).length
+  const wins = gameResults.filter(
+    (r) => r.game.status === 'final' && r.result.team_score !== null && r.result.opponent_score !== null &&
+      r.result.team_score > r.result.opponent_score
+  ).length
+  const losses = gameResults.filter(
+    (r) => r.game.status === 'final' && r.result.team_score !== null && r.result.opponent_score !== null &&
+      r.result.team_score < r.result.opponent_score
+  ).length
+  const ties = gameResults.filter(
+    (r) => r.game.status === 'final' && r.result.team_score !== null && r.result.opponent_score !== null &&
+      r.result.team_score === r.result.opponent_score
+  ).length
+  const totalPoints = gameResults.reduce((sum, r) => sum + r.result.points, 0)
 
   async function saveDoublePointsWeek() {
     setSaving(true)
