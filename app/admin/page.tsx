@@ -72,7 +72,7 @@ export default function AdminPage() {
     setSyncing(true)
     setSyncMsg('')
     try {
-      const res = await fetch('/api/sync-games', { method: 'GET' })
+      const res = await fetch('/api/sync-games', { method: 'POST' })
       const json = await res.json()
       if (res.ok) {
         setSyncMsg(`✓ Synced! Season ${json.season} Week ${json.week} — ${json.gamesUpserted} games updated.`)
