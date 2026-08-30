@@ -37,6 +37,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
 
   // Local state: which team is assigned to each slot
   // draftMap[userId][pickIndex] = teamId
@@ -69,6 +71,22 @@ export default function AdminPage() {
     setLoading(false)
   }
 
+  async function handleSync() {
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch('/api/sync-games', { method: 'GET' })
+      const json = await res.json()
+      if (res.ok) {
+        setSyncMsg(`✓ Synced! Season ${json.season} Week ${json.week} — ${json.gamesUpserted} games updated.`)
+      } else {
+        setSyncMsg(`Error: ${json.error}`)
+      }
+    } catch (e) {
+      setSyncMsg('Network error — try again.')
+    }
+    setSyncing(false)
+  }
   async function handleSave() {
     if (!data) return
     setSaving(true)
@@ -169,6 +187,13 @@ export default function AdminPage() {
             className="bg-nfl-navy text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-900 transition disabled:opacity-50"
           >
             {saving ? 'Saving…' : 'Save Assignments'}
+          </button>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50"
+          >
+            {syncing ? 'Syncing…' : '🔄 Sync Scores'}
           </button>
         </div>
 
