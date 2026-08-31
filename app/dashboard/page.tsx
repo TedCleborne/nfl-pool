@@ -1,16 +1,26 @@
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase'
 import { calculateStandings } from '@/lib/scoring'
 import StandingsTable from '@/components/StandingsTable'
 import WeeklyScores from '@/components/WeeklyScores'
+import Navbar from '@/components/Navbar'
 
-export const revalidate = 60 // revalidate every 60 seconds
+export const revalidate = 60
 
 export default async function DashboardPage() {
   const cookieStore = cookies()
   const supabase = createServerClient(cookieStore)
 
-  // ─── Fetch all data ─────────────────────────────────────────
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: leagueUser } = await supabase
+    .from('league_users')
+    .select('id, display_name, email')
+    .eq('id', user.id)
+    .single()
+
   const [
     { data: users },
     { data: assignments },
@@ -32,19 +42,15 @@ export default async function DashboardPage() {
     supabase.from('double_points_weeks').select('user_id, team_id, week, season, locked'),
   ])
 
-  // ─── Current week ────────────────────────────────────────────
-  const finalGames = (games || []).filter((g) => g.status === 'final')
   const currentWeek = games && games.length > 0
     ? Math.max(...games.map((g) => g.is_playoff ? 0 : g.week).filter(w => w > 0))
     : 1
   const currentSeason = games && games.length > 0 ? games[0].season : 2026
 
-  // Games for the current/most recent active week
   const weekGames = (games || []).filter(
     (g) => g.week === currentWeek && g.season === currentSeason && !g.is_playoff
   )
 
-  // ─── Standings ───────────────────────────────────────────────
   const standings = (users && assignments && games)
     ? calculateStandings({
         users: users as any,
@@ -54,31 +60,34 @@ export default async function DashboardPage() {
       })
     : []
 
+  // My team IDs only
+  const myTeamIds = (assignments || [])
+    .filter((a) => a.user_id === user.id)
+    .map((a) => a.team_id)
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">2026 NFL Pool</h1>
-        <p className="text-gray-500 text-sm mt-0.5">
-          Season standings · Week {currentWeek}
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar displayName={leagueUser?.display_name || user.email || 'Player'} />
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">2026 NFL Pool</h1>
+          <p className="text-gray-500 text-sm mt-0.5">Season standings · Week {currentWeek}</p>
+        </div>
 
-      {/* Standings */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">Standings</h2>
-        <StandingsTable standings={standings} />
-      </section>
-
-      {/* This week's scores */}
-      {weekGames.length > 0 && (
         <section>
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">
-            Week {currentWeek} Scores
-          </h2>
-          <WeeklyScores games={weekGames as any} assignments={assignments as any} />
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">Standings</h2>
+          <StandingsTable standings={standings} />
         </section>
-      )}
+
+        {weekGames.length > 0 && (
+          <section>
+            <h2 className="text-lg font-semibold text-gray-800 mb-3">
+              Week {currentWeek} Scores
+            </h2>
+            <WeeklyScores games={weekGames as any} myTeamIds={myTeamIds} />
+          </section>
+        )}
+      </main>
     </div>
   )
 }
