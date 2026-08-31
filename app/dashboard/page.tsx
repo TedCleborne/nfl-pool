@@ -35,8 +35,13 @@ export default async function DashboardPage() {
     supabase.from('double_points_weeks').select('user_id, team_id, week, season, locked'),
   ])
 
-  const currentWeek = games && games.length > 0
-    ? Math.max(...games.map((g) => g.is_playoff ? 0 : g.week).filter(w => w > 0))
+const scheduledOrLive = (games || []).filter(
+  (g) => !g.is_playoff && (g.status === 'scheduled' || g.status === 'in_progress')
+)
+const currentWeek = scheduledOrLive.length > 0
+  ? Math.min(...scheduledOrLive.map((g) => g.week))
+  : games && games.length > 0
+    ? Math.max(...(games || []).filter((g) => !g.is_playoff).map((g) => g.week))
     : 1
   const currentSeason = games && games.length > 0 ? games[0].season : 2026
 

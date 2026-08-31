@@ -104,6 +104,12 @@ export default function TeamCard({
   ).length
   const totalPoints = gameResults.reduce((sum, r) => sum + r.result.points, 0)
 
+  // Compute BYE week: whichever week 1-18 has no regular season game
+  const regularGameWeeks = new Set(sortedGames.filter((g) => !g.is_playoff).map((g) => g.week))
+  const byeWeek = regularGameWeeks.size > 0
+    ? Array.from({ length: 18 }, (_, i) => i + 1).find((w) => !regularGameWeeks.has(w)) ?? null
+    : null
+
   async function saveDoublePointsWeek() {
     setSaving(true)
     const supabase = createBrowserSupabaseClient()
@@ -142,6 +148,23 @@ export default function TeamCard({
     setLocalDpw(null)
     setSaving(false)
     router.refresh()
+  }
+
+  // Build a merged schedule: regular game rows + one BYE row inserted at the right spot
+  type ScheduleRow =
+    | { type: 'game'; week: number; data: typeof gameResults[0] }
+    | { type: 'bye'; week: number }
+
+  const scheduleRows: ScheduleRow[] = []
+  for (const gr of gameResults) {
+    if (byeWeek !== null && byeWeek < gr.game.week && !scheduleRows.find((r) => r.type === 'bye')) {
+      scheduleRows.push({ type: 'bye', week: byeWeek })
+    }
+    scheduleRows.push({ type: 'game', week: gr.game.week, data: gr })
+  }
+  // BYE is after all games (late-season BYE)
+  if (byeWeek !== null && !scheduleRows.find((r) => r.type === 'bye')) {
+    scheduleRows.push({ type: 'bye', week: byeWeek })
   }
 
   return (
@@ -192,9 +215,7 @@ export default function TeamCard({
               </div>
               <div className="text-right">
                 <div className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                  isUnderdog
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-gray-100 text-gray-600'
+                  isUnderdog ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'
                 }`}>
                   {spread}
                 </div>
@@ -254,10 +275,23 @@ export default function TeamCard({
 
       {/* ── Game-by-game results ───────────────────────────── */}
       <div className="divide-y divide-gray-50">
-        {gameResults.length === 0 && (
+        {scheduleRows.length === 0 && (
           <div className="px-5 py-4 text-sm text-gray-400">No game data yet — sync scores to load schedule.</div>
         )}
-        {gameResults.map(({ game, result, isDoublePointsWeek }) => {
+        {scheduleRows.map((row) => {
+          if (row.type === 'bye') {
+            return (
+              <div key="bye" className="px-5 py-2.5 flex items-center justify-between text-sm bg-gray-50">
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-400 w-14 text-xs">Wk {row.week}</span>
+                  <span className="text-gray-400 italic text-xs">BYE week</span>
+                </div>
+                <span className="text-gray-300 text-sm">—</span>
+              </div>
+            )
+          }
+
+          const { game, result, isDoublePointsWeek } = row.data
           const isHome = game.home_team_id === team.id
           const opponent = isHome ? game.away_team : game.home_team
           const isUpcoming = game.status === 'scheduled'
@@ -283,7 +317,9 @@ export default function TeamCard({
                   {isHome ? 'vs' : '@'} {opponent.abbreviation}
                   {isUpcoming && game.home_spread !== null && (
                     <span className="ml-1.5 text-xs text-gray-400">
-                      ({isHome ? game.home_spread > 0 ? `+${game.home_spread}` : game.home_spread : -game.home_spread > 0 ? `+${-game.home_spread}` : -game.home_spread})
+                      ({isHome
+                        ? game.home_spread > 0 ? `+${game.home_spread}` : game.home_spread
+                        : -game.home_spread > 0 ? `+${-game.home_spread}` : -game.home_spread})
                     </span>
                   )}
                 </span>
