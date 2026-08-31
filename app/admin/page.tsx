@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 interface User {
   id: string
@@ -76,6 +76,23 @@ export default function AdminPage() {
       const json = await res.json()
       if (res.ok) {
         setSyncMsg(`✓ Synced! Season ${json.season} Week ${json.week} — ${json.gamesUpserted} games updated.`)
+      } else {
+        setSyncMsg(`Error: ${json.error}`)
+      }
+    } catch (e) {
+      setSyncMsg('Network error — try again.')
+    }
+    setSyncing(false)
+  }
+
+  async function handleSyncSeason() {
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch('/api/sync-season', { method: 'POST' })
+      const json = await res.json()
+      if (res.ok) {
+        setSyncMsg(`✓ Full season synced! ${json.gamesUpserted} games loaded across ${json.weeksProcessed} weeks.${json.errors?.length ? ` (${json.errors.length} week errors)` : ''}`)
       } else {
         setSyncMsg(`Error: ${json.error}`)
       }
@@ -173,8 +190,7 @@ export default function AdminPage() {
           <div>
             <h1 className="text-2xl font-bold">Admin: Team Assignments</h1>
             <p className="text-gray-500 text-sm">
-              Drag teams from the pool below into each player's 4 slots.
-              This replaces all existing assignments.
+              Assign teams to each player. This replaces all existing assignments.
             </p>
           </div>
           <div className="flex gap-3">
@@ -184,6 +200,13 @@ export default function AdminPage() {
               className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50"
             >
               {syncing ? 'Syncing…' : '🔄 Sync Scores'}
+            </button>
+            <button
+              onClick={handleSyncSeason}
+              disabled={syncing}
+              className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {syncing ? 'Syncing…' : '📅 Sync Full Season'}
             </button>
             <button
               onClick={handleSave}
@@ -275,7 +298,7 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* Update user display names */}
+        {/* User accounts */}
         <div className="mt-6 bg-white rounded-xl border border-gray-200 p-4">
           <h2 className="font-semibold text-gray-700 mb-1">User Accounts</h2>
           <p className="text-gray-400 text-xs mb-3">
