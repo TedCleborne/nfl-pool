@@ -74,14 +74,15 @@ const currentWeek = scheduledOrLive.length > 0
         <StandingsTable standings={standings} />
       </section>
 
-      {weekGames.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">
-            Week {currentWeek} Scores
-          </h2>
-          <WeeklyScores games={weekGames as any} myTeamIds={myTeamIds} />
-        </section>
-      )}
+ {(games || []).filter((g) => !g.is_playoff).length > 0 && (
+  <section>
+    <WeeklyScores
+      games={(games || []).filter((g) => !g.is_playoff) as any}
+      myTeamIds={myTeamIds}
+      currentWeek={currentWeek}
+    />
+  </section>
+)}
     </div>
   )
 }
