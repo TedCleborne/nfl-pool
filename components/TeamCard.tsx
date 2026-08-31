@@ -41,6 +41,7 @@ function resultBadge(game: Game, teamId: number) {
 function formatGameTime(isoString: string) {
   const d = new Date(isoString)
   return d.toLocaleString('en-US', {
+    timeZone: 'America/New_York',
     weekday: 'short',
     month: 'short',
     day: 'numeric',
