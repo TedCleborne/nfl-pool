@@ -29,7 +29,7 @@ export function calculateGamePoints({
       if (game.home_spread !== null) {
         // home_spread is from home team's perspective (negative = home favored)
         const teamSpread = isHomeTeam ? game.home_spread : -game.home_spread
-        const isUnderdog = teamSpread > 3.5
+        const isUnderdog = teamSpread >= 7
 
         if (isUnderdog) {
           // Regular season: +1 bonus (total 2); Playoffs: +2 bonus (total 3)

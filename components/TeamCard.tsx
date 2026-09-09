@@ -195,7 +195,7 @@ export default function TeamCard({
         const isHome = nextGame.home_team_id === team.id
         const opponent = isHome ? nextGame.away_team : nextGame.home_team
         const spread = spreadLabel(nextGame.home_spread, isHome)
-        const isUnderdog = nextGame.home_spread !== null && (isHome ? nextGame.home_spread > 3.5 : -nextGame.home_spread > 3.5)
+const isUnderdog = nextGame.home_spread !== null && (isHome ? nextGame.home_spread >= 7 : -nextGame.home_spread >= 7)
         return (
           <div className="px-5 py-3 bg-blue-50 border-b border-blue-100">
             <div className="flex items-center justify-between">
