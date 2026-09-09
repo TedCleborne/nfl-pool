@@ -25,7 +25,7 @@ export function calculateGamePoints({
       // Win
       points = 1
 
-      // Underdog bonus: team's spread > 3.5 means they were the underdog
+      // Underdog bonus: team's spread >= 7 means they were the underdog
       if (game.home_spread !== null) {
         // home_spread is from home team's perspective (negative = home favored)
         const teamSpread = isHomeTeam ? game.home_spread : -game.home_spread

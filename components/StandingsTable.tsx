@@ -93,7 +93,7 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
       {/* Legend */}
       <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400 flex gap-4">
         <span>Pts = total points</span>
-        <span>🐶 Wins = underdog wins (&gt;3.5 pt dog)</span>
+        <span>🐶 Wins = underdog wins (&gt;7+ pt dog)</span>
         <span>T (tie) = −1 pt</span>
       </div>
     </div>
