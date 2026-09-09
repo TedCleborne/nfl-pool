@@ -25,7 +25,7 @@ export function calculateGamePoints({
       // Win
       points = 1
 
-      // Underdog bonus: team's spread >= 7 means they were the underdog
+      // Underdog bonus: team's spread >= 7 means they were a significant underdog
       if (game.home_spread !== null) {
         // home_spread is from home team's perspective (negative = home favored)
         const teamSpread = isHomeTeam ? game.home_spread : -game.home_spread
@@ -36,11 +36,11 @@ export function calculateGamePoints({
           points += game.is_playoff ? 2 : 1
         }
       }
-  // Blowout bonus: win by more than 24
-  if (teamScore - opponentScore > 24) {
-    points += 1
-  }
-}
+
+      // Blowout bonus: win by more than 24 points
+      if (teamScore - opponentScore > 24) {
+        points += 1
+      }
     } else if (teamScore === opponentScore) {
       // Tie — only possible in regular season (no OT ties in playoffs)
       points = -1
@@ -120,18 +120,15 @@ export function calculateStandings({
       })
 
       const teamPoints = gameResults.reduce((sum, r) => sum + r.points, 0)
-const wins = gameResults.filter(
-  (r) => r.game.status === 'final' && r.team_score !== null && r.opponent_score !== null &&
-    r.team_score > r.opponent_score
-).length
-const losses = gameResults.filter(
-  (r) => r.game.status === 'final' && r.team_score !== null && r.opponent_score !== null &&
-    r.team_score < r.opponent_score
-).length
-const ties = gameResults.filter(
-  (r) => r.game.status === 'final' && r.team_score !== null && r.opponent_score !== null &&
-    r.team_score === r.opponent_score
-).length
+      const wins = gameResults.filter(
+        (r) => r.game.status === 'final' && r.team_score !== null && r.opponent_score !== null && r.team_score > r.opponent_score
+      ).length
+      const losses = gameResults.filter(
+        (r) => r.game.status === 'final' && r.team_score !== null && r.opponent_score !== null && r.team_score < r.opponent_score
+      ).length
+      const ties = gameResults.filter(
+        (r) => r.game.status === 'final' && r.team_score !== null && r.opponent_score !== null && r.team_score === r.opponent_score
+      ).length
 
       return {
         team,
