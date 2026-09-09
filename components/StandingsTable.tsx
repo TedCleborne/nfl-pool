@@ -95,6 +95,7 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
         <span>Pts = total points</span>
         <span>🐶 Wins = underdog wins (7+ pt dog)</span>
         <span>T (tie) = −1 pt</span>
+<span>💥 +1 bonus for winning by 25+</span>
       </div>
     </div>
   )

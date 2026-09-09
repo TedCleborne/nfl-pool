@@ -36,6 +36,11 @@ export function calculateGamePoints({
           points += game.is_playoff ? 2 : 1
         }
       }
+  // Blowout bonus: win by more than 24
+  if (teamScore - opponentScore > 24) {
+    points += 1
+  }
+}
     } else if (teamScore === opponentScore) {
       // Tie — only possible in regular season (no OT ties in playoffs)
       points = -1
