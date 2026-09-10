@@ -43,15 +43,6 @@ export interface NflGame {
   away_team?: NflTeam
 }
 
-export interface DoublePointsWeek {
-  id: number
-  user_id: string
-  team_id: number
-  week: number
-  season: number
-  locked: boolean
-}
-
 export interface UserStanding {
   user_id: string
   display_name: string
@@ -69,14 +60,12 @@ export interface TeamWithPoints {
   wins: number
   losses: number
   ties: number
-  double_points_week: number | null
   games: GameResult[]
 }
 
 export interface GameResult {
   game: NflGame
   points: number
-  is_double_points_week: boolean
   opponent: NflTeam
   team_score: number | null
   opponent_score: number | null

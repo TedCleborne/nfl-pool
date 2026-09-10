@@ -5,13 +5,11 @@ import { NflGame, NflTeam, GameResult, TeamWithPoints, UserStanding } from '@/ty
 export interface GamePointsInput {
   game: NflGame & { home_team: NflTeam; away_team: NflTeam }
   teamId: number
-  isDoublePointsWeek: boolean
 }
 
 export function calculateGamePoints({
   game,
   teamId,
-  isDoublePointsWeek,
 }: GamePointsInput): GameResult {
   const isHomeTeam = game.home_team_id === teamId
   const opponent = isHomeTeam ? game.away_team : game.home_team
@@ -27,7 +25,6 @@ export function calculateGamePoints({
 
       // Underdog bonus: team's spread >= 7 means they were a significant underdog
       if (game.home_spread !== null) {
-        // home_spread is from home team's perspective (negative = home favored)
         const teamSpread = isHomeTeam ? game.home_spread : -game.home_spread
         const isUnderdog = teamSpread >= 7
 
@@ -42,21 +39,15 @@ export function calculateGamePoints({
         points += 1
       }
     } else if (teamScore === opponentScore) {
-      // Tie — only possible in regular season (no OT ties in playoffs)
+      // Tie — only possible in regular season
       points = -1
     }
     // Loss = 0 points
-
-    // Double points: applies to regular season games only, multiplies all points
-    if (isDoublePointsWeek && !game.is_playoff) {
-      points *= 2
-    }
   }
 
   return {
     game,
     points,
-    is_double_points_week: isDoublePointsWeek && !game.is_playoff,
     opponent,
     team_score: teamScore,
     opponent_score: opponentScore,
@@ -77,19 +68,12 @@ export interface StandingsInput {
     nfl_teams: NflTeam
   }>
   games: Array<NflGame & { home_team: NflTeam; away_team: NflTeam }>
-  doublePointsWeeks: Array<{
-    user_id: string
-    team_id: number
-    week: number
-    season: number
-  }>
 }
 
 export function calculateStandings({
   users,
   assignments,
   games,
-  doublePointsWeeks,
 }: StandingsInput): UserStanding[] {
   const standings: UserStanding[] = users.map((user) => {
     const userTeams = assignments.filter((a) => a.user_id === user.id)
@@ -97,27 +81,12 @@ export function calculateStandings({
     const teamsWithPoints: TeamWithPoints[] = userTeams.map((assignment) => {
       const team = assignment.nfl_teams
       const teamGames = games.filter(
-        (g) =>
-          g.home_team_id === team.id || g.away_team_id === team.id
+        (g) => g.home_team_id === team.id || g.away_team_id === team.id
       )
 
-      const dpw = doublePointsWeeks.find(
-        (d) => d.user_id === user.id && d.team_id === team.id
+      const gameResults = teamGames.map((game) =>
+        calculateGamePoints({ game: game as any, teamId: team.id })
       )
-
-      const gameResults = teamGames.map((game) => {
-        const isDoublePointsWeek =
-          dpw !== undefined &&
-          game.week === dpw.week &&
-          game.season === dpw.season &&
-          !game.is_playoff
-
-        return calculateGamePoints({
-          game: game as any,
-          teamId: team.id,
-          isDoublePointsWeek,
-        })
-      })
 
       const teamPoints = gameResults.reduce((sum, r) => sum + r.points, 0)
       const wins = gameResults.filter(
@@ -136,7 +105,6 @@ export function calculateStandings({
         wins,
         losses,
         ties,
-        double_points_week: dpw?.week ?? null,
         games: gameResults,
       }
     })
@@ -146,12 +114,7 @@ export function calculateStandings({
     const totalLosses = teamsWithPoints.reduce((sum, t) => sum + t.losses, 0)
     const totalTies = teamsWithPoints.reduce((sum, t) => sum + t.ties, 0)
     const totalUnderdogWins = teamsWithPoints.reduce((sum, t) => {
-      const underdogWins = t.games.filter((g) => {
-        const basePoints = g.is_double_points_week
-          ? g.points / 2
-          : g.points
-        return basePoints >= 2
-      }).length
+      const underdogWins = t.games.filter((g) => g.points >= 2).length
       return sum + underdogWins
     }, 0)
 

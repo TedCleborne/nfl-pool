@@ -29,12 +29,6 @@ export default async function MyTeamsPage() {
     .eq('user_id', user.id)
     .order('draft_pick')
 
-  // My double points designations
-  const { data: dpWeeks } = await supabase
-    .from('double_points_weeks')
-    .select('id, team_id, week, season, locked')
-    .eq('user_id', user.id)
-
   // All games for my teams
   const myTeamIds = (assignments || []).map((a) => a.team_id)
 
@@ -50,12 +44,6 @@ export default async function MyTeamsPage() {
     .or(myTeamIds.map((id) => `home_team_id.eq.${id},away_team_id.eq.${id}`).join(','))
     .order('kickoff_time')
 
-  // Current week (for double points context)
-  const currentSeason = 2026
-  const scheduledGames = (games || []).filter(
-    (g) => !g.is_playoff && g.season === currentSeason && g.status !== 'final'
-  )
-const upcomingWeeks = Array.from(new Set(scheduledGames.map((g) => g.week))).sort((a, b) => a - b)
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar displayName={leagueUser?.display_name || user.email || 'Player'} />
@@ -67,13 +55,6 @@ const upcomingWeeks = Array.from(new Set(scheduledGames.map((g) => g.week))).sor
           </p>
         </div>
 
-        {/* Double points explainer */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-sm text-amber-800">
-          <strong>Double Points Week:</strong> You can designate one week per team where all points
-          are doubled. Pick it anytime before kickoff — it locks automatically when the game
-          starts. Applies to regular season only, no ties in playoffs.
-        </div>
-
         {assignments && assignments.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2">
             {assignments.map((assignment) => {
@@ -81,17 +62,12 @@ const upcomingWeeks = Array.from(new Set(scheduledGames.map((g) => g.week))).sor
               const teamGames = (games || []).filter(
                 (g) => g.home_team_id === team.id || g.away_team_id === team.id
               )
-              const dpw = (dpWeeks || []).find((d) => d.team_id === team.id)
 
               return (
                 <TeamCard
                   key={assignment.team_id}
                   team={team}
                   games={teamGames as any}
-                  doublePointsWeek={dpw || null}
-                  upcomingWeeks={upcomingWeeks}
-                  userId={user.id}
-                  currentSeason={currentSeason}
                 />
               )
             })}
