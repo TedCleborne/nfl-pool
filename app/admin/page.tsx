@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface User {
   id: string
@@ -38,8 +38,12 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
   const [syncing, setSyncing] = useState(false)
+  const [syncingSeason, setSyncingSeason] = useState(false)
+  const [syncingSpreads, setSyncingSpreads] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
 
+  // Local state: which team is assigned to each slot
+  // draftMap[userId][pickIndex] = teamId
   const [draftMap, setDraftMap] = useState<Record<string, number[]>>({})
 
   async function fetchData(pw: string) {
@@ -56,6 +60,7 @@ export default function AdminPage() {
     setData(json)
     setAuthed(true)
 
+    // Initialize draftMap from existing assignments
     const map: Record<string, number[]> = {}
     json.users.forEach((u) => { map[u.id] = [0, 0, 0, 0] })
     json.assignments.forEach((a) => {
@@ -72,7 +77,7 @@ export default function AdminPage() {
     setSyncing(true)
     setSyncMsg('')
     try {
-      const res = await fetch('/api/sync-games', { method: 'POST' })
+      const res = await fetch('/api/sync-games', { method: 'GET' })
       const json = await res.json()
       if (res.ok) {
         setSyncMsg(`✓ Synced! Season ${json.season} Week ${json.week} — ${json.gamesUpserted} games updated.`)
@@ -85,21 +90,38 @@ export default function AdminPage() {
     setSyncing(false)
   }
 
-  async function handleSyncSeason() {
-    setSyncing(true)
+  async function handleSyncSpreads() {
+    setSyncingSpreads(true)
     setSyncMsg('')
     try {
-      const res = await fetch('/api/sync-season', { method: 'POST' })
+      const res = await fetch('/api/sync-spreads', { method: 'GET' })
       const json = await res.json()
       if (res.ok) {
-        setSyncMsg(`✓ Full season synced! ${json.gamesUpserted} games loaded across ${json.weeksProcessed} weeks.${json.errors?.length ? ` (${json.errors.length} week errors)` : ''}`)
+        setSyncMsg(`✓ Spreads synced! Checked ${json.gamesChecked} games, updated ${json.spreadsUpdated}.`)
       } else {
         setSyncMsg(`Error: ${json.error}`)
       }
     } catch (e) {
       setSyncMsg('Network error — try again.')
     }
-    setSyncing(false)
+    setSyncingSpreads(false)
+  }
+
+  async function handleSyncSeason() {
+    setSyncingSeason(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch('/api/sync-season', { method: 'POST' })
+      const json = await res.json()
+      if (res.ok) {
+        setSyncMsg(`✓ Full season synced! ${json.weeksProcessed} weeks, ${json.gamesUpserted} games updated.`)
+      } else {
+        setSyncMsg(`Error: ${json.error}`)
+      }
+    } catch (e) {
+      setSyncMsg('Network error — try again.')
+    }
+    setSyncingSeason(false)
   }
 
   async function handleSave() {
@@ -138,6 +160,7 @@ export default function AdminPage() {
   function assignTeam(userId: string, pickIndex: number, teamId: number) {
     setDraftMap((prev) => {
       const updated = { ...prev }
+      // Remove this team from any other slot
       Object.keys(updated).forEach((uid) => {
         updated[uid] = updated[uid].map((t, i) => {
           if (t === teamId && !(uid === userId && i === pickIndex)) return 0
@@ -151,6 +174,7 @@ export default function AdminPage() {
     })
   }
 
+  // Teams not yet assigned
   const assignedTeamIds = new Set(
     Object.values(draftMap).flat().filter(Boolean)
   )
@@ -190,25 +214,37 @@ export default function AdminPage() {
           <div>
             <h1 className="text-2xl font-bold">Admin: Team Assignments</h1>
             <p className="text-gray-500 text-sm">
-              Assign teams to each player. This replaces all existing assignments.
+              Drag teams from the pool below into each player's 4 slots.
+              This replaces all existing assignments.
             </p>
           </div>
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={handleSync}
-              disabled={syncing}
+              disabled={syncing || syncingSeason || syncingSpreads}
               className="bg-green-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50"
             >
               {syncing ? 'Syncing…' : '🔄 Sync Scores'}
             </button>
             <button
-              onClick={handleSyncSeason}
-              disabled={syncing}
-              className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+              type="button"
+              onClick={handleSyncSpreads}
+              disabled={syncing || syncingSeason || syncingSpreads}
+              className="bg-amber-500 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-amber-600 transition disabled:opacity-50"
             >
-              {syncing ? 'Syncing…' : '📅 Sync Full Season'}
+              {syncingSpreads ? 'Syncing…' : '📊 Sync Spreads'}
             </button>
             <button
+              type="button"
+              onClick={handleSyncSeason}
+              disabled={syncing || syncingSeason || syncingSpreads}
+              className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {syncingSeason ? 'Syncing…' : '📅 Sync Full Season'}
+            </button>
+            <button
+              type="button"
               onClick={handleSave}
               disabled={saving}
               className="bg-nfl-navy text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-900 transition disabled:opacity-50"
@@ -257,13 +293,14 @@ export default function AdminPage() {
                         className="flex-1 border border-gray-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-nfl-navy"
                       >
                         <option value="">— unassigned —</option>
+                        {/* Show assigned team + all unassigned teams */}
                         {team && (
                           <option value={team.id}>{team.full_name}</option>
                         )}
                         {data.teams
                           .filter((t) => !assignedTeamIds.has(t.id) || t.id === teamId)
                           .sort((a, b) => a.full_name.localeCompare(b.full_name))
-                          .filter((t) => t.id !== teamId)
+                          .filter((t) => t.id !== teamId) // avoid dupe
                           .map((t) => (
                             <option key={t.id} value={t.id}>{t.full_name}</option>
                           ))}
@@ -298,7 +335,7 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* User accounts */}
+        {/* Update user display names */}
         <div className="mt-6 bg-white rounded-xl border border-gray-200 p-4">
           <h2 className="font-semibold text-gray-700 mb-1">User Accounts</h2>
           <p className="text-gray-400 text-xs mb-3">

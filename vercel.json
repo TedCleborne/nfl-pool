@@ -1,1 +1,60 @@
-{}
+{
+  "crons": [
+    {
+      "path": "/api/sync-spreads",
+      "schedule": "55 16 * * 0"
+    },
+    {
+      "path": "/api/sync-spreads",
+      "schedule": "55 17 * * 0"
+    },
+    {
+      "path": "/api/sync-spreads",
+      "schedule": "55 19 * * 0"
+    },
+    {
+      "path": "/api/sync-spreads",
+      "schedule": "55 20 * * 0"
+    },
+    {
+      "path": "/api/sync-spreads",
+      "schedule": "10 0 * * 5"
+    },
+    {
+      "path": "/api/sync-spreads",
+      "schedule": "10 1 * * 5"
+    },
+    {
+      "path": "/api/sync-spreads",
+      "schedule": "10 0 * * 2"
+    },
+    {
+      "path": "/api/sync-spreads",
+      "schedule": "10 1 * * 2"
+    },
+    {
+      "path": "/api/sync-games",
+      "schedule": "*/30 17-23 * * 0"
+    },
+    {
+      "path": "/api/sync-games",
+      "schedule": "*/30 0-2 * * 1"
+    },
+    {
+      "path": "/api/sync-games",
+      "schedule": "*/30 23-23 * * 4"
+    },
+    {
+      "path": "/api/sync-games",
+      "schedule": "*/30 0-2 * * 5"
+    },
+    {
+      "path": "/api/sync-games",
+      "schedule": "*/30 23-23 * * 1"
+    },
+    {
+      "path": "/api/sync-games",
+      "schedule": "*/30 0-2 * * 2"
+    }
+  ]
+}
