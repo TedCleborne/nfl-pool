@@ -51,6 +51,7 @@ export interface UserStanding {
   losses: number
   ties: number
   underdog_wins: number
+  blowout_wins: number
   teams: TeamWithPoints[]
 }
 

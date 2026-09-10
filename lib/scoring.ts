@@ -118,6 +118,17 @@ export function calculateStandings({
       return sum + underdogWins
     }, 0)
 
+    const totalBlowoutWins = teamsWithPoints.reduce((sum, t) => {
+      const blowouts = t.games.filter(
+        (g) =>
+          g.game.status === 'final' &&
+          g.team_score !== null &&
+          g.opponent_score !== null &&
+          g.team_score - (g.opponent_score ?? 0) > 24
+      ).length
+      return sum + blowouts
+    }, 0)
+
     return {
       user_id: user.id,
       display_name: user.display_name,
@@ -126,6 +137,7 @@ export function calculateStandings({
       losses: totalLosses,
       ties: totalTies,
       underdog_wins: totalUnderdogWins,
+      blowout_wins: totalBlowoutWins,
       teams: teamsWithPoints,
     }
   })

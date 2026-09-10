@@ -25,6 +25,7 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
             <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">L</th>
             <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">T</th>
             <th className="px-4 py-3 font-semibold text-center hidden md:table-cell">🐶 Wins</th>
+            <th className="px-4 py-3 font-semibold text-center hidden md:table-cell">💥 Wins</th>
             <th className="px-4 py-3 font-semibold">Teams</th>
           </tr>
         </thead>
@@ -69,6 +70,15 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
                 )}
               </td>
 
+              {/* Blowout wins */}
+              <td className="px-4 py-3 text-center text-gray-600 hidden md:table-cell">
+                {standing.blowout_wins > 0 ? (
+                  <span className="text-orange-600 font-medium">{standing.blowout_wins}</span>
+                ) : (
+                  '—'
+                )}
+              </td>
+
               {/* Teams */}
               <td className="px-4 py-3">
                 <div className="flex gap-1 flex-wrap">
@@ -93,8 +103,8 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
       {/* Legend */}
       <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400 flex gap-4 flex-wrap">
         <span>Pts = total points</span>
-        <span>🐶 Wins = underdog wins (7+ pt dog)</span>
-        <span>💥 +1 bonus for winning by 25+</span>
+        <span>🐶 Wins = underdog wins (7+ pt dog, +2 pts)</span>
+        <span>💥 Wins = blowout wins (25+ pts, +1 bonus)</span>
         <span>T (tie) = −1 pt</span>
       </div>
     </div>
