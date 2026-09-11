@@ -124,18 +124,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Also lock double_points_weeks for any game that has started
-    for (const game of espnGames) {
-      if (game.status !== 'scheduled') {
-        await supabase
-          .from('double_points_weeks')
-          .update({ locked: true })
-          .eq('week', game.week)
-          .eq('season', game.season)
-          .eq('locked', false)
-      }
-    }
-
     return NextResponse.json({
       ok: true,
       season,
@@ -148,10 +136,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Also allow GET for easy manual triggering from browser (no auth in dev)
+// Allow GET for manual triggering from the browser
+// Protected by CRON_SECRET if set
 export async function GET(request: NextRequest) {
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Use POST in production' }, { status: 405 })
-  }
   return POST(request)
 }
