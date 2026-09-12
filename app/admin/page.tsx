@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [syncing, setSyncing] = useState(false)
   const [syncingSeason, setSyncingSeason] = useState(false)
   const [syncingSpreads, setSyncingSpreads] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
 
   // Local state: which team is assigned to each slot
@@ -122,6 +123,23 @@ export default function AdminPage() {
       setSyncMsg('Network error — try again.')
     }
     setSyncingSeason(false)
+  }
+
+  async function handleSendEmail() {
+    setSendingEmail(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch('/api/send-standings-email?test=1', { method: 'POST' })
+      const json = await res.json()
+      if (res.ok) {
+        setSyncMsg(`✓ Standings email sent to ${json.recipients} player${json.recipients !== 1 ? 's' : ''}!`)
+      } else {
+        setSyncMsg(`Error: ${json.error}`)
+      }
+    } catch (e) {
+      setSyncMsg('Network error — try again.')
+    }
+    setSendingEmail(false)
   }
 
   async function handleSave() {
@@ -242,6 +260,14 @@ export default function AdminPage() {
               className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
             >
               {syncingSeason ? 'Syncing…' : '📅 Sync Full Season'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSendEmail}
+              disabled={syncing || syncingSeason || syncingSpreads || sendingEmail}
+              className="bg-purple-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-purple-700 transition disabled:opacity-50"
+            >
+              {sendingEmail ? 'Sending…' : '📧 Send Standings'}
             </button>
             <button
               type="button"
