@@ -114,7 +114,14 @@ export function calculateStandings({
     const totalLosses = teamsWithPoints.reduce((sum, t) => sum + t.losses, 0)
     const totalTies = teamsWithPoints.reduce((sum, t) => sum + t.ties, 0)
     const totalUnderdogWins = teamsWithPoints.reduce((sum, t) => {
-      const underdogWins = t.games.filter((g) => g.points >= 2).length
+      const underdogWins = t.games.filter((g) => {
+        if (g.team_score === null || g.opponent_score === null) return false
+        if (g.team_score <= g.opponent_score) return false // must be a win
+        if (g.game.home_spread === null) return false // must have a spread
+        const isHomeTeam = g.game.home_team_id === t.team.id
+        const teamSpread = isHomeTeam ? g.game.home_spread : -g.game.home_spread
+        return teamSpread >= 7
+      }).length
       return sum + underdogWins
     }, 0)
 
