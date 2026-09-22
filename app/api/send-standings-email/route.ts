@@ -1,13 +1,12 @@
 /**
  * POST /api/send-standings-email
  * Fetches current standings and sends a weekly HTML email to all pool members.
- * Called automatically by a scheduled task every Monday at 9am ET,
+ * Called automatically by a scheduled task every Tuesday at 10am EST,
  * or manually via the admin panel.
  *
  * Env vars required:
- *   RESEND_API_KEY   — from resend.com
- *   EMAIL_FROM       — e.g. "NFL Pool <noreply@yourdomain.com>"
- *   CRON_SECRET      — same secret used for other sync routes
+ *   RESEND_API_KEY      — from resend.com
+ *   EMAIL_FROM          — e.g. "NFL Pool <noreply@yourdomain.com>"
  *   NEXT_PUBLIC_APP_URL — e.g. https://nfl-pool.vercel.app
  */
 
@@ -17,13 +16,6 @@ import { createAdminClient } from '@/lib/supabase'
 import { calculateStandings } from '@/lib/scoring'
 
 export async function POST(request: NextRequest) {
-  // Auth check
-  const authHeader = request.headers.get('authorization')
-  const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   const resendKey = process.env.RESEND_API_KEY
   if (!resendKey) {
     return NextResponse.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 })
