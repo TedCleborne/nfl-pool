@@ -75,8 +75,11 @@ export function calculateStandings({
   assignments,
   games,
 }: StandingsInput): UserStanding[] {
-  const standings: UserStanding[] = users.map((user) => {
+  const standings: UserStanding[] = users.flatMap((user) => {
     const userTeams = assignments.filter((a) => a.user_id === user.id)
+
+    // Skip users with no NFL team assignments (e.g. March Madness-only users)
+    if (userTeams.length === 0) return []
 
     const teamsWithPoints: TeamWithPoints[] = userTeams.map((assignment) => {
       const team = assignment.nfl_teams
@@ -136,7 +139,7 @@ export function calculateStandings({
       return sum + blowouts
     }, 0)
 
-    return {
+    return [{
       user_id: user.id,
       display_name: user.display_name,
       total_points: totalPoints,
@@ -146,7 +149,7 @@ export function calculateStandings({
       underdog_wins: totalUnderdogWins,
       blowout_wins: totalBlowoutWins,
       teams: teamsWithPoints,
-    }
+    }]
   })
 
   // Sort by total points descending
