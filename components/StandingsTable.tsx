@@ -26,11 +26,11 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <table className="w-full text-sm">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-visible">
+      <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="bg-nfl-navy text-white text-left">
-            <th className="px-4 py-3 font-semibold w-8">#</th>
+            <th className="px-4 py-3 font-semibold w-8 rounded-tl-xl">#</th>
             <th className="px-4 py-3 font-semibold">Player</th>
             <th className="px-4 py-3 font-semibold text-center">Pts</th>
             <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">W</th>
@@ -46,7 +46,7 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
                 💥 Wins
               </Tooltip>
             </th>
-            <th className="px-4 py-3 font-semibold">Teams</th>
+            <th className="px-4 py-3 font-semibold rounded-tr-xl">Teams</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -121,7 +121,7 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
       </table>
 
       {/* Legend */}
-      <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400 flex gap-4 flex-wrap">
+      <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400 flex gap-4 flex-wrap rounded-b-xl">
         <span>Pts = total points</span>
         <span>🐶 Wins = underdog wins (7+ pt dog, +1 bonus)</span>
         <span>💥 Wins = blowout wins (25+ pts, +1 bonus)</span>
