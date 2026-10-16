@@ -4,6 +4,18 @@ interface StandingsTableProps {
   standings: UserStanding[]
 }
 
+function Tooltip({ children, tip }: { children: React.ReactNode; tip: string }) {
+  return (
+    <span className="relative group inline-flex items-center gap-1 cursor-default">
+      {children}
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 rounded-lg bg-gray-900 px-3 py-2 text-xs font-normal text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-center leading-snug z-10 whitespace-normal">
+        {tip}
+        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+      </span>
+    </span>
+  )
+}
+
 export default function StandingsTable({ standings }: StandingsTableProps) {
   if (standings.length === 0) {
     return (
@@ -24,8 +36,16 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
             <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">W</th>
             <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">L</th>
             <th className="px-4 py-3 font-semibold text-center hidden sm:table-cell">T</th>
-            <th className="px-4 py-3 font-semibold text-center hidden md:table-cell">🐶 Wins</th>
-            <th className="px-4 py-3 font-semibold text-center hidden md:table-cell">💥 Wins</th>
+            <th className="px-4 py-3 font-semibold text-center hidden md:table-cell">
+              <Tooltip tip="Win as a 7+ point underdog → +1 bonus point">
+                🐶 Wins
+              </Tooltip>
+            </th>
+            <th className="px-4 py-3 font-semibold text-center hidden md:table-cell">
+              <Tooltip tip="Win by 25+ points → +1 bonus point">
+                💥 Wins
+              </Tooltip>
+            </th>
             <th className="px-4 py-3 font-semibold">Teams</th>
           </tr>
         </thead>
