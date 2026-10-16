@@ -43,6 +43,14 @@ export interface NflGame {
   away_team?: NflTeam
 }
 
+export interface BonusWinGame {
+  week: number
+  team_name: string
+  opponent_name: string
+  spread?: number   // underdog wins: team's spread (positive = underdog)
+  margin?: number   // blowout wins: winning margin
+}
+
 export interface UserStanding {
   user_id: string
   display_name: string
@@ -52,6 +60,8 @@ export interface UserStanding {
   ties: number
   underdog_wins: number
   blowout_wins: number
+  underdog_win_games: BonusWinGame[]
+  blowout_win_games: BonusWinGame[]
   teams: TeamWithPoints[]
 }
 

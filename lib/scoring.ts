@@ -1,4 +1,4 @@
-import { NflGame, NflTeam, GameResult, TeamWithPoints, UserStanding } from '@/types'
+import { NflGame, NflTeam, GameResult, TeamWithPoints, UserStanding, BonusWinGame } from '@/types'
 
 // ─── Per-game scoring ───────────────────────────────────────────────────────
 
@@ -116,28 +116,41 @@ export function calculateStandings({
     const totalWins = teamsWithPoints.reduce((sum, t) => sum + t.wins, 0)
     const totalLosses = teamsWithPoints.reduce((sum, t) => sum + t.losses, 0)
     const totalTies = teamsWithPoints.reduce((sum, t) => sum + t.ties, 0)
-    const totalUnderdogWins = teamsWithPoints.reduce((sum, t) => {
-      const underdogWins = t.games.filter((g) => {
-        if (g.team_score === null || g.opponent_score === null) return false
-        if (g.team_score <= g.opponent_score) return false // must be a win
-        if (g.game.home_spread === null) return false // must have a spread
-        const isHomeTeam = g.game.home_team_id === t.team.id
-        const teamSpread = isHomeTeam ? g.game.home_spread : -g.game.home_spread
-        return teamSpread >= 7
-      }).length
-      return sum + underdogWins
-    }, 0)
 
-    const totalBlowoutWins = teamsWithPoints.reduce((sum, t) => {
-      const blowouts = t.games.filter(
-        (g) =>
-          g.game.status === 'final' &&
-          g.team_score !== null &&
-          g.opponent_score !== null &&
-          g.team_score - (g.opponent_score ?? 0) > 24
-      ).length
-      return sum + blowouts
-    }, 0)
+    const underdogWinGames: BonusWinGame[] = []
+    const blowoutWinGames: BonusWinGame[] = []
+
+    teamsWithPoints.forEach((t) => {
+      t.games.forEach((g) => {
+        if (g.game.status !== 'final') return
+        if (g.team_score === null || g.opponent_score === null) return
+        if (g.team_score <= g.opponent_score) return // must be a win
+
+        // Underdog bonus
+        if (g.game.home_spread !== null) {
+          const isHomeTeam = g.game.home_team_id === t.team.id
+          const teamSpread = isHomeTeam ? g.game.home_spread : -g.game.home_spread
+          if (teamSpread >= 7) {
+            underdogWinGames.push({
+              week: g.game.week,
+              team_name: t.team.name,
+              opponent_name: g.opponent.name,
+              spread: teamSpread,
+            })
+          }
+        }
+
+        // Blowout bonus
+        if (g.team_score - g.opponent_score > 24) {
+          blowoutWinGames.push({
+            week: g.game.week,
+            team_name: t.team.name,
+            opponent_name: g.opponent.name,
+            margin: g.team_score - g.opponent_score,
+          })
+        }
+      })
+    })
 
     return [{
       user_id: user.id,
@@ -146,8 +159,10 @@ export function calculateStandings({
       wins: totalWins,
       losses: totalLosses,
       ties: totalTies,
-      underdog_wins: totalUnderdogWins,
-      blowout_wins: totalBlowoutWins,
+      underdog_wins: underdogWinGames.length,
+      blowout_wins: blowoutWinGames.length,
+      underdog_win_games: underdogWinGames,
+      blowout_win_games: blowoutWinGames,
       teams: teamsWithPoints,
     }]
   })
